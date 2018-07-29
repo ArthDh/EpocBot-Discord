@@ -6,7 +6,7 @@ import asyncio
 from discord.ext.commands import Bot
 
 BOT_PREFIX = ("?", "!")
-TOKEN = 'NDcyMzQ3ODYxOTU5NDQyNDMz.DjyEsg.U7-RTowd8OY_-I2M-emSbYnGRg8'
+TOKEN = ''
 
 client = Bot(command_prefix=BOT_PREFIX)
 
