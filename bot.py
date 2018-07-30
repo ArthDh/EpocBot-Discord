@@ -22,11 +22,23 @@ async def roll(context, n1, n2):
 
     await client.say("Here is a random number for " + context.message.author.mention +
                      ": " + str(np.random.randint(n1, n2)))
+ # Greets user
+
+
+@client.command(name='greet',
+                description="Returns a greeting",
+                brief="Greeting.",
+                aliases=['greeting', 'hello'],
+                pass_context=True)
+async def greet(context):
+    greetings = ['Hello', 'How are you?', "What's up?", "Not in a mood for greeting today."]
+    msg = '{} {}'.format(np.random.choice(greetings), context.message.author.mention)
+    await client.send_message(context.message.channel, msg)
 
 
 @client.command(name='timer',
                 description="Reminder in Hrs:Mins:Secs Chore",
-                brief="Reminds to do your chores",
+                brief="Reminds you to do your chores",
                 aliases=['remind', 'remindme'],
                 pass_context=True)
 async def timer(context):
@@ -43,13 +55,10 @@ async def timer(context):
 
 @client.event
 async def on_message(message):
-    await client.process_commands(message)
     # we do not want the bot to reply to itself
     if message.author == client.user:
         return
-    if message.content.startswith('!hello'):
-        msg = 'Whats up? {0.author.mention}'.format(message)
-        await client.send_message(message.channel, msg)
+    await client.process_commands(message)
 
 
 @client.event
