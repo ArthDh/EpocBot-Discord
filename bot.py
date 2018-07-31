@@ -4,6 +4,28 @@ import numpy as np
 import time
 import asyncio
 from discord.ext.commands import Bot
+import keras
+import sys
+import pickle
+import numpy as np
+from keras.models import load_model
+
+
+def sample(preds, temperature=0.2):
+    preds = np.reshape(preds, preds.shape[-1])
+    preds = np.asarray(preds).astype('float64')
+    preds = np.log(preds + 1e-25) / temperature
+    exp_preds = np.exp(preds)
+    preds = exp_preds / np.sum(exp_preds)
+    probas = np.random.multinomial(1, preds, 1)
+    return np.argmax(probas)
+
+
+def inference(sent):
+    string_length = 20
+    string_revised = sent.ljust(string_length)
+    return string_revised
+
 
 BOT_PREFIX = ("?", "!")
 TOKEN = ''
@@ -33,6 +55,56 @@ async def roll(context, n1, n2):
 async def greet(context):
     greetings = ['Hello', 'How are you?', "What's up?", "Not in a mood for greeting today."]
     msg = '{} {}'.format(np.random.choice(greetings), context.message.author.mention)
+    await client.send_message(context.message.channel, msg)
+
+
+@client.command(name='q',
+                description="Returns a ML generated Quote. (starting_word,number of quotes)",
+                brief="Quote.",
+                aliases=['qt'],
+                pass_context=True)
+async def q(context):
+    max_len = 20
+    word_index = {}
+    index2char = {}
+    temperature = 0.5
+
+    model_path = ""  # Path to model
+    model2 = load_model(model_path)
+
+    # Open word_index.pkl
+    with open('', 'rb') as handle:
+        word_index = pickle.load(handle)
+
+    for ch in word_index:
+        index2char[word_index.get(ch)] = ch
+
+    n_tokens = len(word_index) + 1
+    args = context.message.content.split(' ', 2)
+    start_word = args[1]
+    inference_text = inference(start_word)
+    n = (int)(args[2])
+    temp = ""
+    for i in range(n):
+        temp = temp + (inference_text.strip() + " ")
+        generated_text = inference_text[:20] + ""
+        for i in range(100):
+            sampled = np.zeros((1, max_len, n_tokens))
+            for t, char in enumerate(generated_text):
+                sampled[0, t, word_index[char]] = 1.
+            preds = model2.predict(sampled, verbose=0)[0]
+            next_index = sample(preds, temperature)
+            next_char = index2char[next_index]
+            if next_char == '\n':
+                break
+            generated_text += next_char
+            generated_text = generated_text[1:]
+            temp = temp + next_char
+        temp = temp + '\n'
+        temp = temp + '---\n'
+
+    msg = 'Quote for {}\n'.format(context.message.author.mention)
+    msg = msg + temp
     await client.send_message(context.message.channel, msg)
 
 
